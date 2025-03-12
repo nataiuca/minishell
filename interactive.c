@@ -6,17 +6,13 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/15 12:28:48 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/12 00:06:15 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/12 23:52:11 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-#include <readline/readline.h>
-#include <readline/history.h>
 
-
-extern char *rl_replace_line(const char *text, int clear_undo);
-
+extern void rl_replace_line(const char *text, int clear_undo);
 /*
 * catch control-c and print value ^C in each line.
 */

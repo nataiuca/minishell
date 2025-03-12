@@ -6,14 +6,14 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/08 18:21:09 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/12 14:30:13 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/13 00:06:20 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef MINISHELL_H
 # define MINISHELL_H
 # define PROMPT "minishell$ "
-#define MAXARGS 10
+# define MAXARGS 10
 
 # include "lib/libft/libft.h"
 # include <unistd.h>
@@ -23,9 +23,9 @@
 # include <readline/history.h>
 # include <errno.h>
 # include <signal.h>
-#include <string.h>  // Para strchr, memset, strlen
-#include <fcntl.h>   // Para O_RDONLY, O_WRONLY, O_CREAT, open
-#include <unistd.h>  // Para close, read, write (opcional, pero recomendable)
+#include <fcntl.h>  // Agrega esta línea para declarar O_RDWR
+#include <string.h>
+
 // LINUX
 // # include <linux/limits.h> 
 // MAC
@@ -67,18 +67,10 @@ typedef struct redircmd
 	char *file;
 	char *efile;
 	int mode;
+	mode_t right;
 	int fd;
+	char	*hdoc;
 }	t_redircmd;
-
-
-struct heredoccmd 
-{
-    t_type type;   // Tipo de comando
-    struct cmd *cmd;  // El comando que se ejecuta después del heredoc
-    char *delim;   // El delimitador de final de heredoc
-    char *edelim;  // El delimitador final, que es la línea final que indica fin del heredoc
-};
-
 
 typedef enum e_response_msg
 {
@@ -131,7 +123,6 @@ void	catch_signal(void);
 void	catch_interactive(char *input, char *prompt);
 void	save_history(char *input);
 char	*check_input_valid(char *input);
-extern char *rl_replace_line(const char *text, int clear_undo);
 
 // safe_free.c
 void	safe_free_vector(char **split);
@@ -140,7 +131,33 @@ void	safe_free_minishell(t_minishell *minishell);
 // str_util
 int ft_strcountchr(char *str, char chr);
 char	*trim_space_char(char *input);
-void ft_exit_message(char *msg, int exit_code);
-int ft_isspace(char c);
+void ft_exit_message(const char *message, int exit_code);
+int ft_isspace(int c);
+void ft_exit_message_fd(int fd, const char *message, int exit_code);
+
+// token.c
+int	gettoken(char **ps, char *es, char **q, char **eq);
+int	peek(char **ps, char *es, char *toks);
+
+// command.c
+struct cmd* execcmd(void);
+struct cmd* parseexec(char **ps, char *es);
+struct cmd* parsecmd(char *s);
+void runcmd(struct cmd *cmd);
+void exec_command(char *command, char **args);
+
+// redirection.c
+struct cmd* redircmd(struct cmd *subcmd, char *file, char *efile, int mode, mode_t right, int fd, char *hdoc);
+struct cmd* parseredirs(struct cmd *cmd, char **ps, char *es);
+
+// pipe.c
+struct cmd* pipecmd(struct cmd *left, struct cmd *right);
+struct cmd* parsepipe(char **ps, char *es);
+struct cmd* parseline(char **ps, char *es);
+
+// line.c
+struct cmd* nulterminate(struct cmd *cmd);
+void panic(char *s);
+int fork1(void);
 
 #endif
