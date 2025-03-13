@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/12 21:25:10 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/13 00:17:24 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/13 16:26:58 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,15 +21,12 @@ int gettoken(char **ps, char *es, char **q, char **eq) {
     int ret;
 
     s = *ps;
-    // Saltamos espacios en blanco.
-    while(s < es && strchr(whitespace, *s))
-        s++;
+    while (s < es && strchr(whitespace, *s)) s++;
 
-    if(q)
-        *q = s;
+    if (q) *q = s;
 
     ret = *s;
-    switch(*s) {
+    switch (*s) {
         case 0:
             break;
         case '|':
@@ -41,31 +38,30 @@ int gettoken(char **ps, char *es, char **q, char **eq) {
             break;
         case '<':
             s++;
-            // Si encontramos otro '<', es heredoc.
-            if(s < es && *s == '<'){
+            if (s < es && *s == '<') {  // Si encontramos otro '<', es un heredoc.
                 ret = HDOC;
                 s++;
             }
             break;
         case '>':
             s++;
-            if(s < es && *s == '>'){
+            if (s < es && *s == '>') {
                 ret = '+';
                 s++;
             }
             break;
         default:
-            ret = 'a';
-            while(s < es && !strchr(whitespace, *s) && !strchr(symbols, *s))
+            ret = 'a';  // Identificador de palabra
+            while (s < es && !strchr(whitespace, *s) && !strchr(symbols, *s))
                 s++;
             break;
     }
-    if(eq)
-        *eq = s;
 
-    while(s < es && strchr(whitespace, *s))
-        s++;
+    if (eq) *eq = s;
+
+    while (s < es && strchr(whitespace, *s)) s++;
     *ps = s;
+
     return ret;
 }
 

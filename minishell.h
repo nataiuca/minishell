@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/08 18:21:09 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/13 00:06:20 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/13 12:57:48 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,12 @@ typedef struct redircmd
 	int fd;
 	char	*hdoc;
 }	t_redircmd;
+
+struct heredoccmd {
+    t_type type;        // Debe ser HDOC
+    struct cmd *cmd;    // Comando a ejecutar con la entrada heredoc
+    char *delim;        // Delimitador, por ejemplo "EOF"
+};
 
 typedef enum e_response_msg
 {
