@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/12 21:27:25 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/13 17:27:20 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/14 22:44:51 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,87 +96,86 @@ void runcmd(struct cmd *cmd) {
             exit(127);
             break;
 
-        case REDIR:
-            rcmd = (struct redircmd *)cmd;
-            if (rcmd->hdoc) {  
-                // Implementación del here-document (<<)
-                // Se crea un pipe para enviar por STDIN el contenido heredado.
-                int pipefd[2];
-                if (pipe(pipefd) < 0)
-                    panic("pipe error");
-
-                if (fork1() == 0) {
-                    // En el proceso hijo se lee desde el input y se escribe en el pipe.
-                    close(pipefd[0]); // Cerrar extremo de lectura.
-                    char *line = NULL;
-                    size_t len = 0;
-                    ssize_t nread;
-                    // Se lee línea a línea desde el input actual.
-                    while (1) {
-                        nread = getline(&line, &len, stdin);
-                        if (nread < 0)
-                            break;  // Error o EOF.
-                        // Eliminar el salto de línea al final (si existe).
-                        if (line[nread - 1] == '\n')
-                            line[nread - 1] = '\0';
-                        // Si la línea coincide **exactamente** con el delimitador, se termina.
-                        if (strcmp(line, rcmd->hdoc) == 0)
-                            break;
-                        // Escribimos la línea en el pipe, agregando el salto de línea de vuelta.
-                        write(pipefd[1], line, strlen(line));
-                        write(pipefd[1], "\n", 1);
-                    }
-                    free(line);
-                    close(pipefd[1]);
-                    exit(0);
-                }
-                // En el proceso padre se redirige STDIN desde el pipe.
-                close(pipefd[1]);
-                dup2(pipefd[0], STDIN_FILENO);
-                close(pipefd[0]);
-            }
-            else {  
-                // Redirección normal (<, >, >>)
-                int fd;
-                if (rcmd->mode == O_RDONLY) {  
-                    // Redirección de entrada "<"
-                    fd = open(rcmd->file, O_RDONLY);
-                    if (fd < 0) {
-                        perror("open redirection failed");
-                        exit(1);
-                    }
-                    dup2(fd, STDIN_FILENO);
-                    close(fd);
-                }
-                else if (rcmd->mode == (O_WRONLY | O_CREAT | O_TRUNC)) {  
-                    // Redirección de salida ">" (sobreescribe)
-                    fd = open(rcmd->file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                    if (fd < 0) {
-                        perror("open redirection failed");
-                        exit(1);
-                    }
-                    dup2(fd, STDOUT_FILENO);
-                    close(fd);
-                }
-                else if (rcmd->mode == (O_WRONLY | O_CREAT | O_APPEND)) {  
-                    // Redirección de salida ">>" (append)
-                    fd = open(rcmd->file, O_WRONLY | O_CREAT | O_APPEND, 0644);
-                    if (fd < 0) {
-                        perror("open redirection failed");
-                        exit(1);
-                    }
-                    dup2(fd, STDOUT_FILENO);
-                    close(fd);
-                }
-                else {
-                    perror("unknown redirection mode");
-                    exit(1);
-                }
-            }
-            // Se continúa con la ejecución del comando que sigue a la redirección.
-            runcmd(rcmd->cmd);
-            break;
-
+			case REDIR:
+			rcmd = (struct redircmd *)cmd;
+			if (rcmd->hdoc) {  
+				// Implementación del here-document (<<)
+				// Se crea un pipe para enviar por STDIN el contenido heredado.
+				int pipefd[2];
+				if (pipe(pipefd) < 0)
+					panic("pipe error");
+		
+				if (fork1() == 0) {
+					// En el proceso hijo se lee desde STDIN y se escribe en el pipe.
+					close(pipefd[0]); // Cerrar extremo de lectura.
+					char *line = NULL;
+					// Se lee línea a línea desde el input:
+					while ((line = get_next_line(STDIN_FILENO))) {
+						// Usamos ft_strlen de tu libft para obtener la longitud.
+						size_t length = ft_strlen(line);
+						// Si la línea termina en salto de línea, lo eliminamos.
+						if (length > 0 && line[length - 1] == '\n')
+							line[length - 1] = '\0';
+						// Si la línea coincide EXACTAMENTE con el delimitador, se termina.
+						if (strcmp(line, rcmd->hdoc) == 0) {
+							free(line);
+							break;
+						}
+						// Escribimos la línea en el pipe, agregándole un salto de línea.
+						write(pipefd[1], line, ft_strlen(line));
+						write(pipefd[1], "\n", 1);
+						free(line);
+					}
+					close(pipefd[1]);
+					exit(0);
+				}
+				// En el proceso padre se redirige STDIN desde el pipe.
+				close(pipefd[1]);
+				dup2(pipefd[0], STDIN_FILENO);
+				close(pipefd[0]);
+			}
+			else {  
+				// Redirección normal (<, >, >>)
+				int fd;
+				if (rcmd->mode == O_RDONLY) {  
+					// Redirección de entrada "<"
+					fd = open(rcmd->file, O_RDONLY);
+					if (fd < 0) {
+						perror("open redirection failed");
+						exit(1);
+					}
+					dup2(fd, STDIN_FILENO);
+					close(fd);
+				}
+				else if (rcmd->mode == (O_WRONLY | O_CREAT | O_TRUNC)) {  
+					// Redirección de salida ">" (sobreescribe)
+					fd = open(rcmd->file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+					if (fd < 0) {
+						perror("open redirection failed");
+						exit(1);
+					}
+					dup2(fd, STDOUT_FILENO);
+					close(fd);
+				}
+				else if (rcmd->mode == (O_WRONLY | O_CREAT | O_APPEND)) {  
+					// Redirección de salida ">>" (append)
+					fd = open(rcmd->file, O_WRONLY | O_CREAT | O_APPEND, 0644);
+					if (fd < 0) {
+						perror("open redirection failed");
+						exit(1);
+					}
+					dup2(fd, STDOUT_FILENO);
+					close(fd);
+				}
+				else {
+					perror("unknown redirection mode");
+					exit(1);
+				}
+			}
+			// Se continúa con la ejecución del comando que sigue a la redirección.
+			runcmd(rcmd->cmd);
+			break;
+		
         case PIPE:
             pcmd = (struct pipecmd *)cmd;
             if (pipe(p) < 0)

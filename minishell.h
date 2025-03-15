@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/08 18:21:09 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/13 12:57:48 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/15 00:49:48 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,13 @@ struct heredoccmd {
     char *delim;        // Delimitador, por ejemplo "EOF"
 };
 
+typedef struct s_history
+{
+    char **entries;
+    int count;
+    int capacity;
+} t_history;
+
 typedef enum e_response_msg
 {
 	CMD_NOT_FOUND,
@@ -108,6 +115,7 @@ typedef struct minishell
 {
 	char	**path_env;
 	char	**env;
+	t_history *history;
 }	t_minishell;
 
 // env
@@ -122,17 +130,19 @@ void	*safe_malloc(size_t size);
 pid_t	safe_fork(void);
 int safe_open(char *file, int flags, mode_t mode);
 void safe_pipe(int *pipefd);
+
 // void	safe_execve(t_minishell *minishell, char **argv);
 
 // interactive
 void	catch_signal(void);
-void	catch_interactive(char *input, char *prompt);
+void	catch_interactive(t_history *history, char *input, char *prompt);
 void	save_history(char *input);
 char	*check_input_valid(char *input);
 
 // safe_free.c
 void	safe_free_vector(char **split);
 void	safe_free_minishell(t_minishell *minishell);
+void history_free(t_history *hist);
 
 // str_util
 int ft_strcountchr(char *str, char chr);
@@ -165,5 +175,12 @@ struct cmd* parseline(char **ps, char *es);
 struct cmd* nulterminate(struct cmd *cmd);
 void panic(char *s);
 int fork1(void);
+
+// history.c
+t_history *history_create(void);
+void history_add(t_history *hist, const char *entry);
+static char *construct_history_path(const char *histfile_name);
+void load_history_file(t_history *hist, const char *histfile_name);
+void save_history_file(t_history *hist, const char *histfile_name, int max_entries);
 
 #endif

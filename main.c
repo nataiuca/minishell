@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/08 22:34:17 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/13 00:11:45 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/15 00:48:16 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,10 @@ int main(int argc, char **argv, char **envp) {
 
     valid_inital_param(argc, envp, &minishell);
     catch_signal();
+
+	/* Crea la estructura de historial y la carga desde disco */
+    minishell.history = history_create();
+    load_history_file(minishell.history, ".minishell_history");
     while (1) {
         // REPLACE COMMENT FOR TESTER
         if (isatty(fileno(stdin)))
