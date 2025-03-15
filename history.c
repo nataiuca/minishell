@@ -141,10 +141,10 @@ void load_history_file(t_history *hist, const char *histfile_name)
     if (!path)
         return;
     
-    if (access(path, F_OK) != 0)
+    if (access(path, F_OK) != 0)  // Si el archivo no existe, no hay nada que cargar
     {
         free(path);
-        return;  // No existe historial previo
+        return;
     }
     
     int fd = open(path, O_RDONLY);
@@ -175,8 +175,8 @@ void load_history_file(t_history *hist, const char *histfile_name)
                 file_content[i] = '\0';
                 if (*start)
                 {
-                    add_history(start);
-                    history_add(hist, start);
+                    add_history(start);  // Agregar a readline()
+                    history_add(hist, start);  // Agregar a la estructura de historial
                 }
                 start = file_content + i + 1;
             }

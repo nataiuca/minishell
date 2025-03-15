@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/15 12:28:48 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/15 00:47:20 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/15 01:16:27 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,29 +39,24 @@ void	catch_signal(void)
 /*
 * catch control-d, get null input and print exit.
 */
-void catch_interactive(t_history *history, char *input, char *prompt)
+void catch_interactive(t_history *hist, char *input, char *prompt)
 {
     if (!input)
         input = ft_strdup("exit");
     if (strcmp(input, "exit") == 0)
     {
-        // Guarda el historial en disco antes de salir,
-        // pasando la estructura de historial, el nombre de archivo y el límite de entradas.
-        save_history_file(history, ".minishell_history", 1000);
+        // Guarda el historial en disco antes de salir
+        save_history_file(hist, ".minishell_history", 1000);
+        history_free(hist);  // Libera memoria del historial
+
         free(input);
-        
-        // Mueve el cursor una línea hacia arriba
-        printf("\033[1A");
-        
-        // Calcula la longitud del prompt para reposicionar el cursor
-        size_t len = 0;
-        while (prompt[len])
-            len++;
-        printf("\033[%zuC", len);
+        printf("\033[1A");  // Mueve el cursor una línea hacia arriba
+        printf("\033[%zuC", ft_strlen(prompt));  // Reposiciona el cursor
         printf("exit\n");
         exit(0);
     }
 }
+
 
 /*
 * save input to history filtering empty lines
