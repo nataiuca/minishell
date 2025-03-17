@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/08 18:21:09 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/15 00:49:48 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/17 12:50:01 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,5 +182,9 @@ void history_add(t_history *hist, const char *entry);
 static char *construct_history_path(const char *histfile_name);
 void load_history_file(t_history *hist, const char *histfile_name);
 void save_history_file(t_history *hist, const char *histfile_name, int max_entries);
+
+//history2.c
+void history_print(t_history *hist, const char *option);
+void history_clear(t_history *hist);
 
 #endif

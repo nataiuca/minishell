@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   safe_func.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jgamarra <jgamarra@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/15 12:19:42 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/02/08 23:01:51 by jgamarra         ###   ########.fr       */
+/*   Updated: 2025/03/17 12:47:15 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,10 +63,3 @@ int	safe_open(char *file, int flags, mode_t mode)
 	}
 	return (fd);
 }
-
-// void	safe_execve(t_minishell *minishell, char **argv)
-// {
-// 	errno = 0;
-// 	if (execve(minishell->commands->args.path, argv, minishell->env_var) == -1)
-// 		ft_exit_message(strerror(errno), 1);
-// }
