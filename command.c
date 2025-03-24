@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/12 21:27:25 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/24 15:36:26 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/24 22:42:40 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ struct cmd* execcmd(void)
   cmd = malloc(sizeof(*cmd));
   memset(cmd, 0, sizeof(*cmd));
   cmd->type = EXEC;
+  free_exec_argv((struct execcmd *)cmd);
   return (struct cmd*)cmd;
 }
 
@@ -29,28 +30,34 @@ struct cmd* parseexec(char **ps, char *es)
   struct execcmd *cmd;
   struct cmd *ret;
 
-//   if(peek(ps, es, "("))
-//     return parseblock(ps, es);
-  // printf("ps: %s\n", *ps);
   ret = execcmd();
   cmd = (struct execcmd*)ret;
 
   argc = 0;
   ret = parseredirs(ret, ps, es);
+
   while(!peek(ps, es, "|)&;")){ // loop character by character
     if((tok=gettoken(ps, es, &q, &eq)) == 0)
       break;
     if(tok != 'a')
       panic("syntax");
-    cmd->argv[argc] = q;
+
+    // Verificar si hay comillas y procesar solo los tokens que lo necesiten
+    if (q[0] == '"' || q[0] == '\'') {
+        // Solo aplicar strip_quotes si es necesario
+        cmd->argv[argc] = extract_token(&q, es);
+    } else {
+        cmd->argv[argc] = q;
+    }
+
     cmd->eargv[argc] = eq;
     argc++;
+
     if(argc >= MAXARGS)
       panic("too many args");
     ret = parseredirs(ret, ps, es);
   }
-  // print_vector(cmd->argv);
-  // print_vector(cmd->eargv);
+
   cmd->argv[argc] = 0;
   cmd->eargv[argc] = 0;
   return ret;

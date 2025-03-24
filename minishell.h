@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/08 18:21:09 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/17 12:50:01 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/24 18:34:52 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,6 +121,7 @@ typedef struct minishell
 // env
 void		init_env(t_minishell *minishell, char **envp);
 int			ft_env(char **envp, char *key, char *value);
+char *strip_quotes(char *start, char *end);
 
 //params
 void	valid_inital_param(int argc, char **envp, t_minishell *minishell);
@@ -143,17 +144,22 @@ char	*check_input_valid(char *input);
 void	safe_free_vector(char **split);
 void	safe_free_minishell(t_minishell *minishell);
 void history_free(t_history *hist);
+void free_exec_argv(struct execcmd *cmd);
 
 // str_util
 int ft_strcountchr(char *str, char chr);
 char	*trim_space_char(char *input);
-void ft_exit_message(const char *message, int exit_code);
-int ft_isspace(int c);
-void ft_exit_message_fd(int fd, const char *message, int exit_code);
 
 // token.c
 int	gettoken(char **ps, char *es, char **q, char **eq);
 int	peek(char **ps, char *es, char *toks);
+void error_exit(const char *msg);
+
+//expand.c
+char *expand_variables(const char *input);
+char *extract_token(char **ps, char *es);
+char *extract_single_quotes(char **ps, char *es); 
+char *extract_double_quotes(char **ps, char *es);
 
 // command.c
 struct cmd* execcmd(void);

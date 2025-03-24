@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/28 17:04:21 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/15 00:37:05 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/24 16:50:10 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,4 +39,15 @@ void history_free(t_history *hist)
         free(hist->entries[i]);
     free(hist->entries);
     free(hist);
+}
+
+void	free_exec_argv(struct execcmd *cmd)
+{
+	int	i = 0;
+
+	while (cmd->argv[i])
+	{
+		free(cmd->argv[i]);
+		i++;
+	}
 }

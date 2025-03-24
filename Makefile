@@ -7,7 +7,8 @@ FLAGS =
 # FLAGS = -Wall -Werror -Wextra
 SOURCE := main.c env.c param.c \
 safe_func.c interactive.c safe_free.c str_util.c \
-command.c line.c pipe.c redirection.c token.c history.c history2.c
+command.c line.c pipe.c redirection.c token.c history.c history2.c \
+expand.c
 READLINE := -I/usr/local/opt/readline/include -L/usr/local/opt/readline/lib -lreadline
 COMPILE := ${SOURCE:.c=.o}
 
