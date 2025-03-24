@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/12 21:27:25 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/14 22:44:51 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/24 15:36:26 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,34 +176,58 @@ void runcmd(struct cmd *cmd) {
 			runcmd(rcmd->cmd);
 			break;
 		
-        case PIPE:
-            pcmd = (struct pipecmd *)cmd;
-            if (pipe(p) < 0)
-                panic("pipe error");
-
-            if (fork1() == 0) {
-                // Proceso hijo para la izquierda del pipe: redirige STDOUT al pipe.
-                close(STDOUT_FILENO);
-                dup2(p[1], STDOUT_FILENO);
-                close(p[0]);
-                close(p[1]);
-                runcmd(pcmd->left);
-            }
-
-            if (fork1() == 0) {
-                // Proceso hijo para la derecha del pipe: redirige STDIN desde el pipe.
-                close(STDIN_FILENO);
-                dup2(p[0], STDIN_FILENO);
-                close(p[0]);
-                close(p[1]);
-                runcmd(pcmd->right);
-            }
-
-            close(p[0]);
-            close(p[1]);
-            wait(0);
-            wait(0);
-            break;
+			case PIPE:
+			{
+				struct pipecmd *pcmd = (struct pipecmd *)cmd;
+				int p[2];
+			
+				if (pipe(p) < 0) {
+					perror("pipe error");
+					exit(1);
+				}
+			
+				/* Proceso hijo izquierdo: redirige la salida estándar al extremo de escritura del pipe */
+				pid_t pid_left = fork1();
+				if (pid_left < 0) {
+					perror("fork error (left)");
+					exit(1);
+				}
+				if (pid_left == 0) {
+					if (dup2(p[1], STDOUT_FILENO) < 0) {
+						perror("dup2 error (left)");
+						exit(1);
+					}
+					close(p[0]);
+					close(p[1]);
+					runcmd(pcmd->left);
+					exit(0);
+				}
+			
+				/* Proceso hijo derecho: redirige la entrada estándar desde el extremo de lectura del pipe */
+				pid_t pid_right = fork1();
+				if (pid_right < 0) {
+					perror("fork error (right)");
+					exit(1);
+				}
+				if (pid_right == 0) {
+					if (dup2(p[0], STDIN_FILENO) < 0) {
+						perror("dup2 error (right)");
+						exit(1);
+					}
+					close(p[0]);
+					close(p[1]);
+					runcmd(pcmd->right);
+					exit(0);
+				}
+			
+				/* Proceso padre: cierra ambos extremos del pipe y espera a que finalicen los hijos */
+				close(p[0]);
+				close(p[1]);
+				int status;
+				waitpid(pid_left, &status, 0);
+				waitpid(pid_right, &status, 0);
+			}
+			break;
 
         default:
             panic("runcmd: unknown type");
