@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   env.c                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: jgamarra <jgamarra@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/28 17:09:29 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/24 16:57:25 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/17 22:04:43 by jgamarra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,24 +35,46 @@ void	init_env(t_minishell *minishell, char **envp)
 	if (!path_values)
 		ft_exit_message("Error: PATH not found in envp.\n", 1);
 	minishell->path_env = path_values;
-	minishell->env = envp;
+	// load envp and save it in minishell->env allocanting memory
+	i = 0;
+	while (envp[i])
+		i++;
+	minishell->env = safe_malloc(sizeof(char *) * (i + 1));
+	i = -1;
+	while (envp[++i])
+		minishell->env[i] = ft_strdup(envp[i]);
+	minishell->env[i] = NULL;
+	
+	// minishell->env = envp;
 }
 
-char *strip_quotes(char *start, char *end)
+char *get_env_value(t_minishell *minishell, char *key)
 {
-    int len = end - start;
-    char *result = malloc(len + 1);
-    int ri = 0;
-    int i = 0;
-
-    while (i < len) {
-        // Eliminar las comillas simples o dobles
-        if (start[i] != '\'' && start[i] != '"') {
-            result[ri++] = start[i];
+    int len = ft_strlen(key);
+    for (int i = 0; minishell->env[i]; i++) {
+        if (ft_strncmp(minishell->env[i], key, len) == 0 && minishell->env[i][len] == '=') {
+            return &minishell->env[i][len + 1];
         }
-        i++;
     }
+    return NULL;
+}
 
-    result[ri] = '\0';  // Asegurar terminación de cadena
-    return result;
+void set_env_value(t_minishell *minishell, char *key, char *value)
+{
+    int len = ft_strlen(key);
+    for (int i = 0; minishell->env[i]; i++) {
+        if (ft_strncmp(minishell->env[i], key, len) == 0 && minishell->env[i][len] == '=') {
+            free(minishell->env[i]);
+
+            // Allocate space for "key=value\0"
+            int total_len = len + 1 + ft_strlen(value) + 1;
+            minishell->env[i] = safe_malloc(total_len);
+
+            // Manually build the string: key + '=' + value
+            strcpy(minishell->env[i], key);
+            strcat(minishell->env[i], "=");
+            strcat(minishell->env[i], value);
+            break ;
+        }
+    }
 }

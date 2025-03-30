@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/08 18:21:09 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/24 18:34:52 by natferna         ###   ########.fr       */
+/*   Updated: 2025/03/30 23:50:57 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,6 @@
 # include <readline/history.h>
 # include <errno.h>
 # include <signal.h>
-#include <fcntl.h>  // Agrega esta línea para declarar O_RDWR
-#include <string.h>
-
 // LINUX
 // # include <linux/limits.h> 
 // MAC
@@ -39,16 +36,48 @@ typedef enum e_type
 	REDIR,
 	PIPE,
 	HDOC,
+	ECHO,
+	CD,
+	PWD,
+	EXPORT,
+	UNSET,
+	ENV,
+	EXIT,
 }	t_type;
+
+typedef struct s_history
+{
+    char **entries;
+    int count;
+    int capacity;
+} t_history;
+
+typedef struct minishell
+{
+	char	**path_env;
+	char	**env;
+	int		status;
+	t_history *history;
+	int     history_disabled;
+}	t_minishell;
+
+typedef struct echocmd
+{
+	int type;
+	bool new_line;
+	bool simple_quote;
+	bool double_quote;
+	bool invalid;
+}	t_echocmd;
 
 typedef struct cmd
 {
-  t_type type;
+	t_type type;
 }	t_cmd;
 
 typedef struct execcmd
 {
-	t_type type;
+	int type;
 	char *argv[MAXARGS];
 	char *eargv[MAXARGS];
 }	t_execcmd;
@@ -73,17 +102,10 @@ typedef struct redircmd
 }	t_redircmd;
 
 struct heredoccmd {
-    t_type type;        // Debe ser HDOC
-    struct cmd *cmd;    // Comando a ejecutar con la entrada heredoc
-    char *delim;        // Delimitador, por ejemplo "EOF"
+    t_type type;       
+    struct cmd *cmd;   
+    char *delim;        
 };
-
-typedef struct s_history
-{
-    char **entries;
-    int count;
-    int capacity;
-} t_history;
 
 typedef enum e_response_msg
 {
@@ -111,66 +133,58 @@ typedef struct s_response
 	char		*cause;
 }	t_response;
 
-typedef struct minishell
-{
-	char	**path_env;
-	char	**env;
-	t_history *history;
-}	t_minishell;
-
 // env
 void		init_env(t_minishell *minishell, char **envp);
-int			ft_env(char **envp, char *key, char *value);
-char *strip_quotes(char *start, char *end);
+char *get_env_value(t_minishell *minishell, char *key);
+void set_env_value(t_minishell *minishell, char *key, char *value);
 
 //params
 void	valid_inital_param(int argc, char **envp, t_minishell *minishell);
+void prepare_minishell(t_minishell *minishell);
 
 //safe func
 void	*safe_malloc(size_t size);
 pid_t	safe_fork(void);
 int safe_open(char *file, int flags, mode_t mode);
 void safe_pipe(int *pipefd);
-
 // void	safe_execve(t_minishell *minishell, char **argv);
 
 // interactive
 void	catch_signal(void);
-void	catch_interactive(t_history *history, char *input, char *prompt);
+void	catch_interactive(char *input, char *prompt);
 void	save_history(char *input);
 char	*check_input_valid(char *input);
 
 // safe_free.c
 void	safe_free_vector(char **split);
 void	safe_free_minishell(t_minishell *minishell);
-void history_free(t_history *hist);
-void free_exec_argv(struct execcmd *cmd);
 
 // str_util
 int ft_strcountchr(char *str, char chr);
 char	*trim_space_char(char *input);
+char *ft_strreplace(char *str, char *old, char *new);
+bool valid_quotes(char *input, char quote);
 
 // token.c
 int	gettoken(char **ps, char *es, char **q, char **eq);
 int	peek(char **ps, char *es, char *toks);
 void error_exit(const char *msg);
-
-//expand.c
-char *expand_variables(const char *input);
-char *extract_token(char **ps, char *es);
-char *extract_single_quotes(char **ps, char *es); 
-char *extract_double_quotes(char **ps, char *es);
+char *strip_quotes(char *token, int len);
+int  tokenize_char(char c, char *quote);
 
 // command.c
-struct cmd* execcmd(void);
-struct cmd* parseexec(char **ps, char *es);
+struct cmd* execcmd();
+struct cmd* parseexec(char **ps, char *es, t_minishell *minishell);
 struct cmd* parsecmd(char *s);
-void runcmd(struct cmd *cmd);
+void runcmd(struct cmd *cmd, t_minishell *minishell);
 void exec_command(char *command, char **args);
+void control_cmd(t_cmd *cmd, t_minishell *minishell);
 
 // redirection.c
-struct cmd* redircmd(struct cmd *subcmd, char *file, char *efile, int mode, mode_t right, int fd, char *hdoc);
+struct cmd *redircmd(struct cmd *cmd, char *file, char *efile, int mode, mode_t right, int fd, char *hdoc);
+char *process_heredoc(char *q, char *eq);
 struct cmd* parseredirs(struct cmd *cmd, char **ps, char *es);
+
 
 // pipe.c
 struct cmd* pipecmd(struct cmd *left, struct cmd *right);
@@ -182,15 +196,41 @@ struct cmd* nulterminate(struct cmd *cmd);
 void panic(char *s);
 int fork1(void);
 
+// cmd_controller
+int valid_builtins(t_cmd *cmd);
+
+// cmd_impl
+void run_internal(t_cmd *cmd, t_minishell *minishell);
+void run_external(t_cmd *cmd, t_minishell *minishell);
+
+// cmd_util.c
+char *expand_token(const char *token, t_minishell *minishell);
+void expand_variable(t_cmd *cmd, int idx, int *pos, t_minishell *minishell);
+int is_valid_quote(t_cmd *cmd, t_minishell *minishell);
+char *getenv_minishell(t_minishell *minishell, char *key);
+
+// vector
+int ft_vector_size(char **split);
+void	print_vector(char **vector);
+void	safe_free_vector_elem(char **split);
+char	**ft_vector_add_first(char **vector, char *new);
+void	ft_vector_remove_last_element(char **argv);
+void	ft_vector_trim(char **argv);
+void replace_element_index(char **split, int index, char *tmp);
+char	**add_next_index_element(char **split, int index, char *tmp);
+
 // history.c
 t_history *history_create(void);
 void history_add(t_history *hist, const char *entry);
-static char *construct_history_path(const char *histfile_name);
+//static char *construct_history_path(const char *histfile_name);
 void load_history_file(t_history *hist, const char *histfile_name);
 void save_history_file(t_history *hist, const char *histfile_name, int max_entries);
 
 //history2.c
 void history_print(t_history *hist, const char *option);
 void history_clear(t_history *hist);
+void history_free(t_history *hist);
+
+void	print_vector(char **vector);
 
 #endif
