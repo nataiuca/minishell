@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/08 22:34:17 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/30 18:59:06 by natferna         ###   ########.fr       */
+/*   Updated: 2025/04/02 20:27:33 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ int main(int argc, char **argv, char **envp)
             {
                 printf("exit\n");
                 save_history_file(minishell.history, ".minishell_history", 1000);
-                history_clear(minishell.history);
+                history_free(minishell.history);  // Libera solo la memoria sin borrar el archivo.
                 break;
             }
         }
@@ -48,7 +48,7 @@ int main(int argc, char **argv, char **envp)
             {
                 printf("exit\n");
                 save_history_file(minishell.history, ".minishell_history", 1000);
-                history_clear(minishell.history);
+                history_free(minishell.history);  // Se aplica acá también.
                 break;
             }
             input = ft_strtrim(line, "\n");

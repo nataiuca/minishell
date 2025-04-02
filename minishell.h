@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/08 18:21:09 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/04/01 00:33:16 by natferna         ###   ########.fr       */
+/*   Updated: 2025/04/02 20:21:25 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,7 +222,7 @@ char	**add_next_index_element(char **split, int index, char *tmp);
 // history.c
 t_history *history_create(void);
 void history_add(t_history *hist, const char *entry);
-//static char *construct_history_path(const char *histfile_name);
+char *construct_history_path(const char *histfile_name);
 void load_history_file(t_history *hist, const char *histfile_name);
 void save_history_file(t_history *hist, const char *histfile_name, int max_entries);
 
