@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/12 21:27:25 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/31 00:08:45 by natferna         ###   ########.fr       */
+/*   Updated: 2025/04/01 00:06:40 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,50 +33,51 @@ struct cmd *parseexec(char **ps, char *es, t_minishell *minishell) {
 
     argc = 0;
 
-    while (!peek(ps, es, "|")) { 
+    while (!peek(ps, es, "|")) {
         if ((tok = gettoken(ps, es, &q, &eq)) == 0)
             break;
         if (tok != 'a')
             panic("syntax");
-        
+
         int len = eq - q;
-        if ((q[0] == '\'' || q[0] == '"') && q[len - 1] == q[0]) {
-            cmd->argv[argc] = strip_quotes(q, len);
-        } else {
-            cmd->argv[argc] = malloc(len + 1);
-            if (!cmd->argv[argc])
-                error_exit("Error: malloc failed.\n");
-            ft_memcpy(cmd->argv[argc], q, len);
-            cmd->argv[argc][len] = '\0';
+        if (len <= 0)  // Validar longitud del token
+            continue;
+
+        cmd->argv[argc] = malloc(len + 1);
+        if (!cmd->argv[argc])
+            panic("malloc failed");
+
+        ft_memcpy(cmd->argv[argc], q, len);
+        cmd->argv[argc][len] = '\0';
+
+        // Manejo de comillas escapadas
+        char *expanded = strip_quotes(cmd->argv[argc], len);
+        if (expanded) {
+            free(cmd->argv[argc]);
+            cmd->argv[argc] = expanded;
         }
-		{
-			char *expanded = expand_token(cmd->argv[argc], minishell);
-			free(cmd->argv[argc]);
-			cmd->argv[argc] = expanded;
-		}
+
+        // Expandir variables
+        // Definir una variable para la posición e inicializarla en 0
+        int pos = 0;
+        if (cmd->argv[argc])
+            expand_variable((struct cmd *)cmd, argc, &pos, minishell);
 
         cmd->eargv[argc] = eq;
-		{
-            int pos = 0;
-            while (cmd->argv[argc] && cmd->argv[argc][pos])
-            {
-                if (cmd->argv[argc][pos] == '$')
-                    expand_variable((t_cmd *)cmd, argc, &pos, minishell);
-                else
-                    pos++;
-            }
-        }
         argc++;
 
         if (argc >= MAXARGS)
             panic("too many args");
+
         ret = parseredirs(ret, ps, es);
     }
 
-    cmd->argv[argc] = 0;
-    cmd->eargv[argc] = 0;
+    cmd->argv[argc] = NULL;
+    cmd->eargv[argc] = NULL;
+
     return ret;
 }
+
 
 void valid_command(t_execcmd *ecmd, t_minishell *minishell)
 {

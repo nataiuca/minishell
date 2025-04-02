@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/08 18:21:09 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/30 23:50:57 by natferna         ###   ########.fr       */
+/*   Updated: 2025/04/01 00:33:16 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,7 +169,7 @@ bool valid_quotes(char *input, char quote);
 int	gettoken(char **ps, char *es, char **q, char **eq);
 int	peek(char **ps, char *es, char *toks);
 void error_exit(const char *msg);
-char *strip_quotes(char *token, int len);
+char *strip_quotes(const char *token, int len);
 int  tokenize_char(char c, char *quote);
 
 // command.c

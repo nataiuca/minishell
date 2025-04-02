@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   vector.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jgamarra <jgamarra@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/28 14:30:08 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/15 20:39:56 by jgamarra         ###   ########.fr       */
+/*   Updated: 2025/03/31 23:01:38 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,6 @@ char	**add_next_index_element(char **split, int index, char *tmp)
 void remove_quotes(char **split, char quote)
 {
 	int i;
-	int j;
 	char *tmp;
 
 	i = -1;

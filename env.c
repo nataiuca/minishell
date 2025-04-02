@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   env.c                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jgamarra <jgamarra@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/28 17:09:29 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/17 22:04:43 by jgamarra         ###   ########.fr       */
+/*   Updated: 2025/03/31 22:58:28 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ void	init_env(t_minishell *minishell, char **envp)
 {
 	int		i;
 	char	**path;
-	char	**path_values;
+	char	**path_values = NULL;
 
 	i = -1;
 	while (envp[++i])

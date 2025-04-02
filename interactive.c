@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   interactive.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jgamarra <jgamarra@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/15 12:28:48 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/01/26 16:35:39 by jgamarra         ###   ########.fr       */
+/*   Updated: 2025/03/31 23:00:12 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-
+void rl_replace_line(const char *text, int clear_undo);
 /*
 * catch control-c and print value ^C in each line.
 */

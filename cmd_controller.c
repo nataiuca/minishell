@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/15 13:39:59 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/30 17:59:15 by natferna         ###   ########.fr       */
+/*   Updated: 2025/04/01 00:29:42 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,85 +29,100 @@ int valid_builtins(t_cmd *cmd)
 
 t_cmd *prepare_builtins(t_cmd *cmd, t_minishell *minishell)
 {
-	t_execcmd *ecmd;
-	int idx;
-	int pos;
-	
-	ecmd = (t_execcmd *)cmd;
-	if (ft_strstr(ecmd->argv[0], "echo"))
-	{
-		// quote validator
-		char quote=0;
-		idx = 1;
-		while (ecmd->argv[idx])
-		{
-			pos = 0;
-			while (ecmd->argv[idx][pos])
-			{
-				if (!quote && (ecmd->argv[idx][pos] == '\'' || ecmd->argv[idx][pos] == '\"'))
-					quote = ecmd->argv[idx][pos];
-				else if (quote && ecmd->argv[idx][pos] == quote)
-					quote = 0;
-				pos++;
-			}
-			idx++;
-		}
-		if (quote)
-		{
-			write(2, "Error: Unmatched quote\n", 23);
-			return (cmd);
-		}
-		// quote validator
-		
-		// new line validator
-		int new_line = 1;
-		idx = 1;
-		while (ecmd->argv[idx] && ft_strstr(ecmd->argv[idx], "-n"))
-		{
-			new_line = 0;
-			idx++;
-		}
-		// new line validator
+    t_execcmd *ecmd;
+    int idx;
+    int pos;
 
-		// print echo
-		if (!ecmd->argv[idx])
-			write(1, "", 1);
-		while (ecmd->argv[idx])
-		{
-			pos = 0;
-			while (ecmd->argv[idx][pos])
-			{
-				if (!quote && (ecmd->argv[idx][pos] == '\'' || ecmd->argv[idx][pos] == '\"'))
+    ecmd = (t_execcmd *)cmd;
+
+    if (ft_strstr(ecmd->argv[0], "echo"))
+    {
+        char quote = 0;
+
+        // Validar comillas no cerradas
+        idx = 1;
+        while (ecmd->argv[idx])
+        {
+            pos = 0;
+            while (ecmd->argv[idx][pos])
+            {
+                if (!quote && (ecmd->argv[idx][pos] == '\'' || ecmd->argv[idx][pos] == '\"'))
 				{
-					quote = ecmd->argv[idx][pos];
+					quote = ecmd->argv[idx][pos]; 
+					write(1, &ecmd->argv[idx][pos], 1);  // Imprimir comilla de apertura
 					pos++;
-					continue ;
+					continue;
 				}
 				else if (quote && ecmd->argv[idx][pos] == quote)
 				{
+					write(1, &ecmd->argv[idx][pos], 1);  // Imprimir comilla de cierre
 					quote = 0;
 					pos++;
-					continue ;
+					continue;
 				}
-				if (quote != '\'' && ecmd->argv[idx][pos] == '$' && ecmd->argv[idx][pos + 1] == '?')
-				{
-					write(1, ft_itoa(minishell->status), ft_strlen(ft_itoa(minishell->status)));
-					pos += 2;
-					continue ;
-				}
-				write(1, &ecmd->argv[idx][pos], 1);
-				pos++;
-			}
-			// print if next element is not empty
-			if (ecmd->argv[idx + 1])
-				write(1, " ", 1);
-			idx++;
-		}
-		if (new_line)
-			write(1, "\n", 1);
-		// print echo
-	}
-	return (cmd);
+            }
+            idx++;
+        }
+        if (quote)
+        {
+            write(2, "Error: Unmatched quote\n", 23);
+            return (cmd);
+        }
+
+        // Manejo de la opción -n
+        int new_line = 1;
+        idx = 1;
+        while (ecmd->argv[idx] && ft_strstr(ecmd->argv[idx], "-n"))
+        {
+            new_line = 0;
+            idx++;
+        }
+
+        // Imprimir el resultado de echo
+        if (!ecmd->argv[idx])
+            write(1, "", 1);
+
+        while (ecmd->argv[idx])
+        {
+            pos = 0;
+            while (ecmd->argv[idx][pos])
+            {
+                // Manejar comillas
+                if (!quote && (ecmd->argv[idx][pos] == '\'' || ecmd->argv[idx][pos] == '\"'))
+                {
+                    quote = ecmd->argv[idx][pos];
+                    write(1, &ecmd->argv[idx][pos], 1);  // Imprimir la comilla de apertura
+                    pos++;
+                    continue;
+                }
+                else if (quote && ecmd->argv[idx][pos] == quote)
+                {
+                    write(1, &ecmd->argv[idx][pos], 1);  // Imprimir la comilla de cierre
+                    quote = 0;
+                    pos++;
+                    continue;
+                }
+                // Manejar expansión de $? (último código de salida)
+                if (quote != '\'' && ecmd->argv[idx][pos] == '$' && ecmd->argv[idx][pos + 1] == '?')
+                {
+                    char *status_str = ft_itoa(minishell->status);
+                    write(1, status_str, ft_strlen(status_str));
+                    free(status_str);
+                    pos += 2;
+                    continue;
+                }
+                write(1, &ecmd->argv[idx][pos], 1);
+                pos++;
+            }
+            if (ecmd->argv[idx + 1])
+                write(1, " ", 1);
+            idx++;
+        }
+        if (new_line)
+            write(1, "\n", 1);
+    }
+
+    return (cmd);
 }
 
 t_cmd *prepare_builtins_old(t_cmd *cmd, t_minishell *minishell)

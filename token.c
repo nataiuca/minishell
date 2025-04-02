@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/12 21:25:10 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/30 21:44:06 by natferna         ###   ########.fr       */
+/*   Updated: 2025/04/01 00:33:01 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,24 +51,33 @@ int gettoken(char **ps, char *es, char **q, char **eq) {
                 s++;
             }
             break;
-			case '"':
-			case '\'':
-			{
-				char quote = *s;  // Guarda la comilla (por ejemplo, '"')
-				if (q)
-					*q = s;       // Deja que q apunte al inicio (la comilla)
-				s++;              // Salta la comilla de apertura
-				while (s < es && *s != quote)
-					s++;
-				if (s >= es || *s != quote)
-					error_exit("Error: Comilla de cierre no encontrada.\n");
-				ret = 'a';
-				s++;  // Salta la comilla de cierre
-			}
-			break;
-			
+        case '"':
+        case '\'':
+        {
+            char quote = *s;
+            if (q)
+                *q = s + 1; // Omitimos la comilla inicial
+            s++;
+
+            while (s < es) {
+                if (*s == '\\' && s + 1 < es) {
+                    if (quote == '"' && (s[1] == '"' || s[1] == '\\' || s[1] == '$' || s[1] == '`')) {
+                        s++;  // Mantenemos el carácter escapado, saltando el `\`
+                    }
+                } else if (*s == quote) {
+                    break;  // Encontramos la comilla de cierre
+                }
+                s++;
+            }
+            if (s >= es || *s != quote)
+                error_exit("Error: Comilla de cierre no encontrada.\n");
+
+            ret = 'a';
+            s++;  // Saltar la comilla de cierre
+        }
+        break;
         default:
-            ret = 'a';  // Token de tipo palabra
+            ret = 'a';
             while (s < es && !ft_strchr(whitespace, *s) && !ft_strchr("|&;()<>", *s))
                 s++;
             break;
@@ -77,7 +86,7 @@ int gettoken(char **ps, char *es, char **q, char **eq) {
     if (eq)
         *eq = s;
 
-    // Saltar espacios en blanco para el siguiente token
+    // Saltar espacios en blanco
     while (s < es && ft_strchr(whitespace, *s))
         s++;
     *ps = s;
@@ -96,17 +105,50 @@ int	peek(char **ps, char *es, char *toks)
   return *s && strchr(toks, *s);
 }
 
-char *strip_quotes(char *token, int len) {
-    char quote = 0;
-    char *result = malloc(len + 1); // Reserva la memoria necesaria
+char *strip_quotes(const char *token, int len) {
+    char *result = malloc(len + 1);
     if (!result)
         error_exit("Error: malloc failed.\n");
-    
-    int j = 0;
-    for (int i = 0; i < len; i++) {
-        if (tokenize_char(token[i], &quote)) { // Solo copia los caracteres que no son comillas
-            result[j++] = token[i];
+
+    int i = 0, j = 0;
+    int in_double = 0, in_single = 0;
+
+    while (i < len) {
+        char c = token[i];
+
+        // Manejo de secuencias de escape dentro de comillas dobles
+        if (c == '\\' && i + 1 < len) {
+            char next = token[i + 1];
+
+            if (in_double && (next == '"' || next == '\\' || next == '$' || next == '`')) {
+                result[j++] = next;  // Copiamos el carácter escapado, omitiendo el `\`
+                i += 2;
+                continue;
+            } else if (!in_single) {
+                // Fuera de comillas simples, copiamos el `\` y el carácter escapado
+                result[j++] = c;
+                result[j++] = next;
+                i += 2;
+                continue;
+            }
         }
+
+        // Manejo de comillas dobles
+        if (c == '"' && !in_single) {
+            in_double = !in_double;  // Alternamos el estado de comillas dobles
+            i++;
+            continue;
+        }
+        // Manejo de comillas simples
+        if (c == '\'' && !in_double) {
+            in_single = !in_single;  // Alternamos el estado de comillas simples
+            i++;
+            continue;
+        }
+
+        // Copiamos cualquier otro carácter
+        result[j++] = c;
+        i++;
     }
     result[j] = '\0';
     return result;

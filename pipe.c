@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipe.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jgamarra <jgamarra@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/12 21:31:57 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/15 16:16:18 by jgamarra         ###   ########.fr       */
+/*   Updated: 2025/03/31 23:01:16 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,9 +27,10 @@ struct cmd* pipecmd(struct cmd *left, struct cmd *right)
 struct cmd* parsepipe(char **ps, char *es)
 {
   struct cmd *cmd;
+  t_minishell	minishell;
 
   // printf("parsepipe->ps: %s\n", *ps);
-  cmd = parseexec(ps, es);
+  cmd = parseexec(ps, es, &minishell);
   if(peek(ps, es, "|")){
     gettoken(ps, es, 0, 0);
     cmd = pipecmd(cmd, parsepipe(ps, es));

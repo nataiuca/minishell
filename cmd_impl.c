@@ -6,7 +6,7 @@
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/15 13:45:13 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/31 00:06:15 by natferna         ###   ########.fr       */
+/*   Updated: 2025/04/01 00:30:43 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,17 +40,20 @@ void run_internal(t_cmd *cmd, t_minishell *minishell)
             while (ecmd->argv[idx][pos])
             {
                 if (!quote && (ecmd->argv[idx][pos] == '\'' || ecmd->argv[idx][pos] == '\"'))
-                {
-                    quote = ecmd->argv[idx][pos];
-                    pos++;
-                    continue;
-                }
-                else if (quote && ecmd->argv[idx][pos] == quote)
-                {
-                    quote = 0;
-                    pos++;
-                    continue;
-                }
+				{
+					quote = ecmd->argv[idx][pos]; 
+					write(1, &ecmd->argv[idx][pos], 1);  // Imprimir comilla de apertura
+					pos++;
+					continue;
+				}
+				else if (quote && ecmd->argv[idx][pos] == quote)
+				{
+					write(1, &ecmd->argv[idx][pos], 1);  // Imprimir comilla de cierre
+					quote = 0;
+					pos++;
+					continue;
+				}
+
                 if (quote != '\'' && ecmd->argv[idx][pos] == '$')
                 {
                     pos++;
