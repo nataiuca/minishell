@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   str_util.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jgamarra <jgamarra@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/11 19:14:24 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/03/16 13:10:08 by jgamarra         ###   ########.fr       */
+/*   Updated: 2025/03/27 13:22:03 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 

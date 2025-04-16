@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   history.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: natferna <natferna@student.42madrid.com>    +#+  +:+       +#+        */
+/*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/14 18:18:56 by natferna          #+#    #+#             */
-/*   Updated: 2025/03/15 00:00:00 by natferna         ###   ########.fr       */
+/*   Created: 2025/03/26 14:14:07 by natferna          #+#    #+#             */
+/*   Updated: 2025/03/27 13:16:46 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,39 +77,47 @@ void history_add(t_history *hist, const char *entry)
  * Construye la ruta al archivo de historial *
  * El resultado es: "<HOME>/<HISTFILE_NAME>"
  */
-char *construct_history_path(const char *histfile_name)
+static char *construct_history_path(const char *histfile_name)
 {
     char *home = getenv("HOME");
-    if (!home)
-    {
-        printf("Error: La variable de entorno HOME no está definida.\n");
+    size_t home_len;
+    size_t filename_len;
+    size_t total;
+    char *path;
+    size_t pos;
+    size_t i;
+
+    if (!home || !histfile_name)
         return NULL;
-    }
-    size_t home_len = 0;
+    
+    home_len = 0;
     while (home[home_len])
         home_len++;
-    size_t filename_len = 0;
+    filename_len = 0;
     while (histfile_name[filename_len])
         filename_len++;
     
-    /* Reserva espacio para: home + '/' + filename + '\0' */
-    size_t total = home_len + 1 + filename_len + 1;
-    char *path = malloc(total);
+    /* Se reserva espacio para: home + '/' + filename + '\0' */
+    total = home_len + 1 + filename_len + 1;
+    path = malloc(total);
     if (!path)
-    {
-        printf("Error: No se pudo reservar memoria para la ruta del historial.\n");
         return NULL;
-    }
     
-    size_t pos = 0;
-    for (size_t i = 0; i < home_len; i++)
+    pos = 0;
+    i = 0;
+    while (i < home_len)
     {
-        path[pos++] = home[i];
+        path[pos] = home[i];
+        pos++;
+        i++;
     }
     path[pos++] = '/';
-    for (size_t i = 0; i < filename_len; i++)
+    i = 0;
+    while (i < filename_len)
     {
-        path[pos++] = histfile_name[i];
+        path[pos] = histfile_name[i];
+        pos++;
+        i++;
     }
     path[pos] = '\0';
     
@@ -121,55 +129,66 @@ char *construct_history_path(const char *histfile_name)
  * Se leen todos los comandos (separados por '\n') y, para cada uno, se llama a
  * add_history y se almacena en la estructura t_history.
  */
-void load_history_file(t_history *hist, const char *histfile_name) {
+void load_history_file(t_history *hist, const char *histfile_name)
+{
     char *path = construct_history_path(histfile_name);
+    ssize_t bytes_read;
+    const size_t file_buffer_size = 4096;
+    char *file_content;
+    char *start;
+    ssize_t i;
+
     if (!path)
         return;
-
-    if (access(path, F_OK) != 0) {  // El archivo no existe
-        printf("Historial vacío o no encontrado en: %s\n", path);
+    
+    if (access(path, F_OK) != 0)  // Si el archivo no existe, no hay nada que cargar
+    {
         free(path);
         return;
     }
-
+    
     int fd = open(path, O_RDONLY);
-    if (fd < 0) {
-        perror("Error al abrir el archivo de historial");
+    if (fd < 0)
+    {
         free(path);
         return;
     }
-
-    const size_t file_buffer_size = 4096;
-    char *file_content = malloc(file_buffer_size);
-    if (!file_content) {
-        printf("Error: no se pudo reservar memoria para leer el archivo de historial.\n");
+    
+    file_content = malloc(file_buffer_size);
+    if (!file_content)
+    {
         close(fd);
         free(path);
         return;
     }
-
-    ssize_t bytes_read = read(fd, file_content, file_buffer_size - 1);
-    if (bytes_read > 0) {
+    
+    bytes_read = read(fd, file_content, file_buffer_size - 1);
+    if (bytes_read > 0)
+    {
         file_content[bytes_read] = '\0';
-        char *start = file_content;
-        for (ssize_t i = 0; i < bytes_read; i++) {
-            if (file_content[i] == '\n') {
+        start = file_content;
+        i = 0;
+        while (i < bytes_read)
+        {
+            if (file_content[i] == '\n')
+            {
                 file_content[i] = '\0';
-                if (*start) {
-                    add_history(start);
-                    history_add(hist, start);
+                if (*start)
+                {
+                    add_history(start);  // Agregar a readline()
+                    history_add(hist, start);  // Agregar a la estructura de historial
                 }
                 start = file_content + i + 1;
             }
+            i++;
         }
-        if (*start) {
+        if (*start)
+        {
             add_history(start);
             history_add(hist, start);
         }
-    } else {
-        printf("No se pudo leer el contenido del archivo de historial.\n");
     }
-
+    
     free(file_content);
     close(fd);
     free(path);
@@ -179,30 +198,39 @@ void load_history_file(t_history *hist, const char *histfile_name) {
  * Guarda el historial actual en el archivo.
  * Se escriben, usando write, solo las últimas 'max_entries' entradas.
  */
-void save_history_file(t_history *hist, const char *histfile_name, int max_entries) {
+void save_history_file(t_history *hist, const char *histfile_name, int max_entries)
+{
     char *path = construct_history_path(histfile_name);
+    int fd;
+    int start;
+    int i;
+    size_t len;
+
     if (!path)
         return;
-
-    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0) {
-        perror("Error al abrir el archivo de historial para escribir");
+    
+    fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0)
+    {
         free(path);
         return;
     }
-
-    int start = (hist->count > max_entries) ? hist->count - max_entries : 0;
-    for (int i = start; i < hist->count; i++) {
-        size_t len = 0;
+    
+    if (hist->count > max_entries)
+        start = hist->count - max_entries;
+    else
+        start = 0;
+    i = start;
+    while (i < hist->count)
+    {
+        len = 0;
         while (hist->entries[i][len])
             len++;
-        if (write(fd, hist->entries[i], len) < 0)
-            perror("Error escribiendo entrada de historial");
-        if (write(fd, "\n", 1) < 0)
-            perror("Error escribiendo salto de línea");
+        write(fd, hist->entries[i], len);
+        write(fd, "\n", 1);
+        i++;
     }
-
+    
     close(fd);
     free(path);
 }
-

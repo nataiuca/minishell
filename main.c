@@ -5,75 +5,51 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/02/08 22:34:17 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/04/02 20:27:33 by natferna         ###   ########.fr       */
+/*   Created: 2025/03/26 14:08:51 by natferna          #+#    #+#             */
+/*   Updated: 2025/03/27 16:54:29 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int main(int argc, char **argv, char **envp)
-{
+int main(int argc, char **argv, char **envp) {
     t_minishell minishell;
-    char        *input;
-    struct cmd  *cmd;
-
-    (void)argv;
-    prepare_minishell(&minishell);
+    char *input;
     valid_inital_param(argc, envp, &minishell);
-
-    minishell.history = history_create();
-    if (!minishell.history)
-        ft_exit_message("Error: No se pudo crear el historial.\n", 1);
-    load_history_file(minishell.history, ".minishell_history");
-
     catch_signal();
-    while (1)
-    {
-        if (isatty(fileno(stdin)))
-        {
-            input = readline(PROMPT);
-            if (!input)  // Si readline retorna NULL
-            {
-                printf("exit\n");
-                save_history_file(minishell.history, ".minishell_history", 1000);
-                history_free(minishell.history);  // Libera solo la memoria sin borrar el archivo.
-                break;
+    minishell.history = history_create();
+    load_history_file(minishell.history, ".minishell_history");
+    while (1) {
+        input = readline("minishell$ ");
+        if (!input) {
+            printf("exit\n");
+            save_history_file(minishell.history, ".minishell_history", 1000);
+            history_free(minishell.history);
+            break;
+        }
+        if (input[0] != '\0') {
+            if (strncmp(input, "history", 7) != 0) {
+                add_history(input);
+                history_add(minishell.history, input);
             }
         }
-        else
-        {
-            char *line = get_next_line(fileno(stdin));
-            if (!line)
-            {
-                printf("exit\n");
-                save_history_file(minishell.history, ".minishell_history", 1000);
-                history_free(minishell.history);  // Se aplica acá también.
-                break;
-            }
-            input = ft_strtrim(line, "\n");
-            free(line);
-        }
-
-        input = check_input_valid(input);
-        if (input[0] == '\0')
-        {
+        if (strncmp(input, "history", 7) == 0) {
+            char *arg = input + 7;
+            while (*arg && ft_isspace((unsigned char)*arg))
+                arg++;
+            history_print(minishell.history, ((*arg) != '\0') ? arg : NULL);
             free(input);
             continue;
         }
-
-        /* Evitar agregar comandos que comiencen con "history" */
-        char *trimmed = ft_strtrim(input, " \t");
-        if (ft_strncmp(trimmed, "history", 7) != 0 
-            && minishell.history_disabled == 0)
-            history_add(minishell.history, input);
-        free(trimmed);
-
-        cmd = parsecmd(input);
-        control_cmd(cmd, &minishell);
+        catch_interactive(minishell.history, input, "minishell$ ");
+        input = check_input_valid(input);
+        if (fork() == 0) {
+            runcmd(parsecmd(input), &minishell);
+            exit(0);
+        }
+        wait(NULL);
         free(input);
     }
-
     safe_free_minishell(&minishell);
-    return (0);
+    return 0;
 }

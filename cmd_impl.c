@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/15 13:45:13 by jgamarra          #+#    #+#             */
-/*   Updated: 2025/04/01 00:30:43 by natferna         ###   ########.fr       */
+/*   Created: 2025/03/26 14:12:47 by natferna          #+#    #+#             */
+/*   Updated: 2025/03/27 16:41:50 by natferna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,14 +17,19 @@ void run_internal(t_cmd *cmd, t_minishell *minishell)
     t_execcmd *ecmd;
     int idx;
     int pos;
-    char quote = 0;
 
     ecmd = (t_execcmd *)cmd;
-    
-    // Por ejemplo, usando ft_strcmp para los builtins (puedes usar ft_strstr)
-    if (ft_strcmp(ecmd->argv[0], "echo") == 0)
+
+    // Lógica de manejo de comillas y caracteres especiales
+    char quote = 0;
+    if (ft_strstr(ecmd->argv[0], "echo"))
     {
-        /* Implementación de echo (tu código actual) */
+        if (!is_valid_quote(cmd, minishell))
+        {
+            return;
+        }
+
+        // Verificación de la opción "-n" para no imprimir nueva línea
         int new_line = 1;
         idx = 1;
         while (ecmd->argv[idx] && ft_strstr(ecmd->argv[idx], "-n"))
@@ -32,6 +37,8 @@ void run_internal(t_cmd *cmd, t_minishell *minishell)
             new_line = 0;
             idx++;
         }
+
+        // Impresión del comando echo
         if (!ecmd->argv[idx])
             write(1, "", 1);
         while (ecmd->argv[idx])
@@ -39,68 +46,60 @@ void run_internal(t_cmd *cmd, t_minishell *minishell)
             pos = 0;
             while (ecmd->argv[idx][pos])
             {
+                // Manejo de comillas y expansión de variables
                 if (!quote && (ecmd->argv[idx][pos] == '\'' || ecmd->argv[idx][pos] == '\"'))
-				{
-					quote = ecmd->argv[idx][pos]; 
-					write(1, &ecmd->argv[idx][pos], 1);  // Imprimir comilla de apertura
-					pos++;
-					continue;
-				}
-				else if (quote && ecmd->argv[idx][pos] == quote)
-				{
-					write(1, &ecmd->argv[idx][pos], 1);  // Imprimir comilla de cierre
-					quote = 0;
-					pos++;
-					continue;
-				}
+                {
+                    quote = ecmd->argv[idx][pos];
+                    pos++;
+                    continue;
+                }
+                else if (quote && ecmd->argv[idx][pos] == quote)
+                {
+                    quote = 0;
+                    pos++;
+                    continue;
+                }
 
+                // Expansión de variables de entorno
                 if (quote != '\'' && ecmd->argv[idx][pos] == '$')
                 {
                     pos++;
                     if (ecmd->argv[idx][pos] == '?')
                     {
-                        char *status_str = ft_itoa(minishell->status);
-                        write(1, status_str, ft_strlen(status_str));
-                        free(status_str);
+                        write(1, ft_itoa(minishell->status), ft_strlen(ft_itoa(minishell->status)));
                         pos++;
-                        continue;
-                    }
-                    else if ((ft_isalnum(ecmd->argv[idx][pos]) || ecmd->argv[idx][pos] == '_')
-                             && ecmd->argv[idx][pos] != '\\' && ecmd->argv[idx][pos] != '"')
-                    {
-                        expand_variable(cmd, idx, &pos, minishell);
                         continue;
                     }
                     else
                     {
-                        write(1, &ecmd->argv[idx][pos - 1], 1);
-                        if (ecmd->argv[idx][pos] == '\\' || ecmd->argv[idx][pos] == '"')
-                            continue;
-                        else
-                        {
-                            write(1, &ecmd->argv[idx][pos], 1);
-                            pos++;
-                            continue;
-                        }
+                        expand_variable(cmd, idx, &pos, minishell);
+                        continue;
                     }
                 }
+
+                // Ignorar barras invertidas
                 if (ecmd->argv[idx][pos] == '\\')
                 {
                     pos++;
                     continue;
                 }
+
+                // Escribir el carácter
                 write(1, &ecmd->argv[idx][pos], 1);
                 pos++;
             }
+
             if (ecmd->argv[idx + 1])
                 write(1, " ", 1);
             idx++;
         }
+
         if (new_line)
             write(1, "\n", 1);
+
         minishell->status = 0;
     }
-    else if (ft_strcmp(ecmd->argv[0], "pwd") == 0)
+    else if (ft_strstr(ecmd->argv[0], "pwd"))
     {
         char *pwd = getcwd(NULL, 0);
         if (!pwd)
@@ -114,12 +113,13 @@ void run_internal(t_cmd *cmd, t_minishell *minishell)
         free(pwd);
         minishell->status = 0;
     }
-    else if (ft_strcmp(ecmd->argv[0], "cd") == 0)
+    else if (ft_strstr(ecmd->argv[0], "cd"))
     {
-        /* Implementación de cd (tu código para cd) */
-        // [...]
+        // Implementación de cd
+        // Validar comillas, expansión de variables y cambio de directorio
+        // Asegúrate de manejar las validaciones y las variables de entorno correctamente.
     }
-    else if (ft_strcmp(ecmd->argv[0], "env") == 0)
+    else if (ft_strstr(ecmd->argv[0], "env"))
     {
         int i = 0;
         while (minishell->env[i])
@@ -129,55 +129,72 @@ void run_internal(t_cmd *cmd, t_minishell *minishell)
             i++;
         }
     }
-    else if (ft_strcmp(ecmd->argv[0], "exit") == 0)
+    else if (ft_strstr(ecmd->argv[0], "exit"))
     {
         exit(minishell->status);
     }
-    else if (ft_strcmp(ecmd->argv[0], "export") == 0)
+    else if (ft_strstr(ecmd->argv[0], "export"))
     {
-        /* Implementación de export, si corresponde */
+        // Implementación de export (si es necesario)
     }
-    else if (ft_strcmp(ecmd->argv[0], "unset") == 0)
+    else if (ft_strstr(ecmd->argv[0], "unset"))
     {
-        /* Implementación de unset, si corresponde */
+        // Implementación de unset (si es necesario)
     }
-    else if (ft_strcmp(ecmd->argv[0], "history") == 0)
-	{
-		/* Si se pasa "-c", se limpia el historial y se actualiza el archivo persistente */
-		if (ecmd->argv[1] && ft_strcmp(ecmd->argv[1], "-c") == 0)
-		{
-			history_clear(minishell->history);
-			save_history_file(minishell->history, ".minishell_history", 500);
-			minishell->history_disabled = 1;  // Opcional: evitar agregar nuevos comandos esta sesión
-			printf("Historial borrado.\n");
-		}
-		/* Si se pasa una opción tipo "-N" */
-		else if (ecmd->argv[1] && ecmd->argv[1][0] == '-' &&
-				ft_isdigit((unsigned char)ecmd->argv[1][1]))
-		{
-			history_print(minishell->history, ecmd->argv[1]);
-		}
-		else
-		{
-			history_print(minishell->history, NULL);
-		}
-		minishell->status = 0;
-	}
 }
-
 
 void run_external(t_cmd *cmd, t_minishell *minishell)
 {
-	int status;
-	pid_t pid;
+    int status;
+    pid_t pid;
 
-	if((pid = fork1()) == 0)
+    if ((pid = fork()) == 0)
+    {
+        runcmd(cmd, minishell);
+    }
+    waitpid(pid, &status, 0);
+    if (WIFEXITED(status))
+    {
+        minishell->status = WEXITSTATUS(status);
+    }
+}
+
+void print_vector(char **vector) {
+    int i = 0;
+    while (vector[i]) {
+        printf("vector[%d]: %s\n", i, vector[i]);
+        i++;
+    }
+}
+
+int is_valid_quote(t_cmd *cmd, t_minishell *minishell)
+{
+	char quote;
+	int idx;
+	t_execcmd *ecmd;
+	int pos;
+	
+	ecmd = (t_execcmd *)cmd;
+	idx = 1;
+	quote = 0;
+	while (ecmd->argv[idx])
 	{
-		runcmd(cmd, minishell);
+		pos = 0;
+		while (ecmd->argv[idx][pos])
+		{
+			if (!quote && (ecmd->argv[idx][pos] == '\'' || ecmd->argv[idx][pos] == '\"'))
+				quote = ecmd->argv[idx][pos];
+			else if (quote && ecmd->argv[idx][pos] == quote)
+				quote = 0;
+			pos++;
+		}
+		idx++;
 	}
-	waitpid(pid, &status, 0);
-	if (WIFEXITED(status))
+	if (quote)
 	{
-		minishell->status = WEXITSTATUS(status);
+		write(2, "Error: Unmatched quote\n", 23);
+		minishell->status = 1;
+		return (0);
 	}
+	return (1);
 }

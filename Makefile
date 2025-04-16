@@ -1,50 +1,60 @@
-# Nombre del programa final
-NAME := minishell
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: natferna <natferna@student.42madrid.com    +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/03/11 12:28:00 by natferna          #+#    #+#              #
+#    Updated: 2025/03/27 15:23:21 by natferna         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
 
-# Compilador y flags
-CC := cc
-CFLAGS := -Wall -Wextra -Werror
-
-# Directorio y nombre de la libft
-LIBFT_DIR := ./lib/libft
-LIBFT := $(LIBFT_DIR)/libft.a
-
-# Librerías necesarias
+LIBFT_NAME := libft.a
+LIBFT_GH := https://github.com/josejpgg/libft_increment.git
+LIBFT_PATH := ./libft
+PROGRAM_NAME := minishell
+CC = cc
+FLAGS = 
+SOURCE := main.c env.c param.c \
+safe_func.c interactive.c safe_free.c str_util.c \
+command.c line.c pipe.c redirection.c token.c \
+cmd_controller.c cmd_impl.c vector.c cmd_util.c \
+expand.c history.c history2.c parse.c
 READLINE := -I/usr/local/opt/readline/include -L/usr/local/opt/readline/lib -lreadline
+COMPILE := $(SOURCE:.c=.o)
 
-# Archivos fuente del minishell
-SRCS := main.c env.c param.c \
-	safe_func.c interactive.c safe_free.c str_util.c \
-	command.c line.c pipe.c redirection.c token.c \
-	cmd_controller.c cmd_impl.c vector.c cmd_util.c \
-	history.c history2.c
+all: minishell
 
-OBJS := $(SRCS:.c=.o)
-
-# Regla por defecto
-all: $(LIBFT) $(NAME)
-
-# Regla para compilar minishell
-$(NAME): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) $(LIBFT) $(READLINE) -o $(NAME)
-
-# Compila libft usando su propio Makefile
-$(LIBFT):
-	$(MAKE) -C $(LIBFT_DIR)
-
-# Cómo compilar los .o
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(READLINE) $(FLAGS) -c $< -o $@
 
-# Limpiar objetos del proyecto y de libft
+minishell: $(COMPILE)
+	$(CC) $(FLAGS) $(COMPILE) $(LIBFT_PATH)/$(LIBFT_NAME) $(READLINE) -o $(PROGRAM_NAME)
+
 clean:
-	@rm -f $(OBJS)
-	@$(MAKE) -C $(LIBFT_DIR) clean
+	@rm -rf $(COMPILE)
+	@make clean -C $(LIBFT_PATH)
 
-fclean: clean
-	@rm -f $(NAME)
-	@$(MAKE) -C $(LIBFT_DIR) fclean
+fclean:
+	@rm -rf $(PROGRAM_NAME)
+	@make fclean -C $(LIBFT_PATH)
+	@rm -rf $(LIBFT_NAME)
 
-re: fclean all
+re: fclean clean libft lib all
 
-.PHONY: all clean fclean re
+lib:
+	@if [ ! -f "$(LIBFT_PATH)/$(LIBFT_NAME)" ]; then \
+		make -C $(LIBFT_PATH); \
+	fi
+
+libft:
+	@if [ ! -d "./lib" ]; then \
+		mkdir -p lib; \
+	fi
+	@if [ -d "./lib/libft" ]; then \
+		rm -rf ./lib/libft; \
+	fi
+	git clone $(LIBFT_GH) $(LIBFT_PATH)
+
+.PHONY: all clean fclean re lib
